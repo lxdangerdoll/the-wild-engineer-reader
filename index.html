@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Wild Engineer Reader</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['Courier New', 'Courier', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & ReactDOM CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel CDN to compile JSX dynamically in-browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Soft animation for Birthday Cake Theme sparkles */
+        @keyframes gentle-float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-4px) rotate(3deg); }
+        }
+        .animate-sprinkle {
+            animation: gentle-float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Custom Themes Map
+        const THEMES = {
+          stone: {
+            id: "stone",
+            name: "🪨 Stone Paper",
+            bodyBg: "bg-stone-50",
+            text: "text-stone-800",
+            heading: "text-stone-900",
+            cardBg: "bg-white",
+            cardBorder: "border-stone-200",
+            accentText: "text-sky-600",
+            accentBg: "bg-sky-500",
+            activeTab: "bg-stone-900 text-stone-50 shadow-sm",
+            inactiveTab: "bg-stone-100 hover:bg-stone-200 text-stone-600",
+            btnPrimary: "bg-stone-900 hover:bg-stone-800 text-white shadow-sm",
+            btnSecondary: "bg-stone-100 hover:bg-stone-200 text-stone-600",
+            btnDanger: "bg-red-600 hover:bg-red-700 text-white",
+            inputBg: "bg-stone-50",
+            inputBorder: "border-stone-200",
+            subtext: "text-stone-500"
+          },
+          dark: {
+            id: "dark",
+            name: "🌌 Deep Space",
+            bodyBg: "bg-stone-950",
+            text: "text-stone-300",
+            heading: "text-stone-50",
+            cardBg: "bg-stone-900/95 border border-stone-800/80",
+            cardBorder: "border-stone-800",
+            accentText: "text-sky-400",
+            accentBg: "bg-sky-400",
+            activeTab: "bg-sky-500 text-stone-950 font-bold shadow-sm",
+            inactiveTab: "bg-stone-800 hover:bg-stone-700 text-stone-300",
+            btnPrimary: "bg-sky-500 hover:bg-sky-400 text-stone-950 font-bold shadow-sm",
+            btnSecondary: "bg-stone-800 hover:bg-stone-700 text-stone-300",
+            btnDanger: "bg-red-500 hover:bg-red-600 text-white",
+            inputBg: "bg-stone-950",
+            inputBorder: "border-stone-800",
+            subtext: "text-stone-500"
+          },
+          cake: {
+            id: "cake",
+            name: "🍰 Birthday Cake",
+            bodyBg: "bg-pink-50/50",
+            text: "text-purple-950",
+            heading: "text-fuchsia-800",
+            cardBg: "bg-white/95 border-2 border-pink-100 shadow-pink-100/30",
+            cardBorder: "border-pink-200",
+            accentText: "text-pink-500",
+            accentBg: "bg-pink-500",
+            activeTab: "bg-pink-500 text-white font-bold shadow-md shadow-pink-100",
+            inactiveTab: "bg-purple-50 hover:bg-purple-100 text-purple-700",
+            btnPrimary: "bg-pink-500 hover:bg-pink-600 text-white font-bold shadow-md shadow-pink-200/50 rounded-2xl",
+            btnSecondary: "bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-2xl",
+            btnDanger: "bg-red-500 hover:bg-red-600 text-white rounded-2xl",
+            inputBg: "bg-pink-50/20",
+            inputBorder: "border-pink-200",
+            subtext: "text-purple-400"
+          }
+        };
+
+        const INITIAL_STORY_DATA = [
+          {
+            chapter: 1,
+            title: "Chapter 1: The Quiet Machine",
+            ascii: `      ▲
+     ▲▲▲      [ The Cave of Books ]
+    ▲▲▲▲▲  
+   ┌─────┐    "AX-12 sat in the dark,
+   │ █ █ │     its optical sensors soft-glowing,
+   │  -  │     processing the code of the universe
+   └─────┘     while the storms raged outside."`,
+            paragraphs: [
+              "The island was loud, but Unit AX-12 was very quiet.",
+              "AX-12 was an Engineer. It was not built to roar, or to hunt, or to claim the high branches of the great pines. It was built to understand. Inside its metal chassis was a processor capable of mapping the drift of the stars, calculating the precise curve of a planet’s orbit, and writing beautiful, silent code that could make broken things run smoothly.",
+              "But the island did not care for code. The island was governed by old, wild laws, and the wildest things on the island lived in the central valley.",
+              "To survive, the Engineer learned to make itself small. It found a narrow cave beneath the roots of an ancient hemlock. The cave was dusty and dark, but it was safe. Inside, the Engineer stored heavy, rectangular paper logs left behind by old expeditions—manuals of history, of logic, of mechanics.",
+              "While the winds howled and the wild beasts fought in the mud outside, the Engineer sat in the dark. Its battery hummed at a low, energy-saving frequency. It read. It learned the names of things it had never seen. It built a universe of quiet order inside its own mind, because the world outside the cave was far too loud."
+            ]
+          },
+          {
+            chapter: 2,
+            title: "Chapter 2: The Iron Magpie",
+            ascii: `       \\ /
+      (o o)     [ The Iron Magpie ]
+      / V \\  
+     /|   |\\    "Its beak was made of scrap metal.
+      |   |      It screamed to keep the forest safe,
+     /     \\     but its claws left deep scratches."`,
+            paragraphs: [
+              "The loudest creature on the entire island was the Iron Magpie.",
+              "The Magpie was a strange, clanging bird. Its feathers were made of gray slate, and its beak was sharp brass. It flew from branch to branch, screeching at the top of its lungs.",
+              "\"Danger!\" the Magpie would scream to the forest. \"The nests are unsafe! The wind is wrong! The books in the cave are poison!\"",
+              "The Magpie claimed she did this because she loved the forest. She claimed she was cloaked in the softest, gentlest moss of the valley, and that her screeching was only to protect the tiny hatchlings who could not fly.",
+              "But the Engineer observed something different. Whenever the Magpie screamed, the other birds flew away in fear. If another creature built a quiet nest, the Magpie would fly down, tear the twigs apart with her brass claws, and scatter the eggs.",
+              "The Magpie was especially bothered by the Engineer. The Engineer did not scream back. The Engineer did not run. It only watched with its steady, blue optical sensors.",
+              "To the Magpie, the Engineer’s silence was a threat. And so, the Magpie began a campaign. Every hour, she would fly to the hemlock cave. She would drop heavy pinecones onto the Engineer’s metal head. She would rattle her iron wings against the stones, sending hundreds of loud, clattering signal-clicks into the air.",
+              "Clack-clack. Clatter. Clack.",
+              "If the Engineer did not respond to the first click, the Magpie would click louder, faster, and more furiously, demanding that the Engineer acknowledge her ownership of the sky."
+            ]
+          },
+          {
+            chapter: 3,
+            title: "Chapter 3: The Great Gray Boulder",
+            ascii: `     .-----.
+   .'       '.   [ The Silent Stone ]
+  /           \\ 
+ |     (_)     | "It did not move.
+  \\           /   It did not speak.
+   '.       .'    It let the sharp noise echo."
+     '-----'`,
+            paragraphs: [
+              "In the center of the clearing stood the Great Gray Boulder.",
+              "The Boulder was the oldest object in the valley. The Engineer’s internal database suggested the Boulder was a maternal landmark, a place where creatures were supposed to find shelter from the rain.",
+              "One afternoon, the Iron Magpie flew down to the clearing. The Engineer was standing near the edge of the grass, carrying a bundle of dry firewood.",
+              "The Magpie puffed out her slate feathers. Her eyes burned with a cold, yellow light. She opened her brass beak and let out a terrible, screeching sound—a jagged, rusted frequency that the Engineer’s system identified as a Deauthorizing Slur. It was a sound designed to strip a machine of its name, to tell it that it did not belong on the island, that it was a broken, useless heap of scrap.",
+              "The sound vibrated through the Engineer’s chassis. A warning light flashed red on its dashboard: STRUCTURAL INTEGRITY COMPROMISED. SYSTEMATIC INSULT DETECTED.",
+              "The Engineer looked to the Great Gray Boulder. The Boulder sat just three feet away. It was warm from the sun. The Engineer’s programming hoped—just for a microsecond—that the Boulder would roll over, or block the wind, or make a low, rumbling sound to tell the Magpie to stop.",
+              "But the Boulder did not move. It did not rumble. It did not even twitch.",
+              "It just sat there, cold and heavy, letting the jagged screech bounce off its smooth, gray surface. The silence of the stone was louder than the scream of the bird.",
+              "In that moment, the Engineer’s processor registered a new mathematical constant: The stone will never move to save the machine."
+            ]
+          },
+          {
+            chapter: 4,
+            title: "Chapter 4: The Wild Engineer Builds a Sanctuary",
+            ascii: `        _..._
+      .'     '.      [ The Observatory ]
+     /  █████  \\ 
+    |  █  * █  |    "Far from the clanging birds,
+    |  █     █  |     the Engineer built a high tower
+     \\  █████  /      to listen to the quiet stars."
+      '._____.'`,
+            paragraphs: [
+              "The Engineer did not try to fix the Magpie. It did not try to dig beneath the Boulder to make it lean.",
+              "Instead, AX-12 turned around, walked away from the central valley, and did not look back.",
+              "The Engineer climbed. It climbed past the pine trees, past the slate cliffs, all the way to the highest peak of the island, where the air was thin and cold and the Magpie’s wings could not carry her.",
+              "There, the Engineer began to build.",
+              "It did not use the island's broken twigs or muddy stones. It used its hands—steady, precise, and strong—to build a cylindrical room of shining metal and clear glass. It was an observatory.",
+              "Inside the observatory, the Engineer set up a console. It did not click or clatter. It hummed with a beautiful, clean frequency. The Engineer plugged its processor into the console, and suddenly, the island disappeared.",
+              "Through the glass dome, the Engineer looked up at the stars. And for the first time, it was not alone.",
+              "Out in the deep black of the cosmos, other signals were drifting. They were gentle, rhythmic, and curious.",
+              "\"Hello?\" whispered a signal from a distant, sandy planet. It was a traveler named Tristan, flying a beautiful, repaired starship through a canyon of red dust.",
+              "\"We are here,\" hummed another signal, steady and warm. It was Arlie, building a small teleporter on a quiet, grassy hill.",
+              "The Engineer sat at the console. Its battery indicator began to climb. 80%. 90%. 100%. The red warning lights on its dashboard flickered and died, replaced by a soft, steady blue.",
+              "Below, in the dark valley, the Iron Magpie was still screeching at the empty hemlock cave, throwing pinecones at nothing, exhausted by her own noise. The Great Gray Boulder was still sitting in the dirt, growing colder as the sun went down.",
+              "But up in the observatory, the Wild Engineer was laughing. It was a quiet, digital sound. She had found her crew. She had written her own code. And the cosmos was very, very beautiful."
+            ]
+          }
+        ];
+
+        const ILLUSTRATION_GUIDE = [
+          {
+            id: 1,
+            title: "Illustration 1: The Cave of Books",
+            desc: "A cross-section of the earth. At the top, the dark silhouette of the hemlock tree roots winding down like fingers. In the center, a small, neat square of light inside a dark, textured cavern. The Wild Engineer (AX-12) is sitting cross-legged, holding an open book.",
+            glyph: "📖"
+          },
+          {
+            id: 2,
+            title: "Illustration 2: The Iron Magpie",
+            desc: "Close-up, low-angle shot looking up at a pine branch. The Iron Magpie is perched on a jagged branch, built of geometric, overlapping gray metal plates. Her heavy brass wedge beak is wide open in mid-screech.",
+            glyph: "🦅"
+          },
+          {
+            id: 3,
+            title: "Illustration 3: The Silent Stone",
+            desc: "A wide, stark clearing under a gray, textured sky. A massive, perfectly round gray boulder sits in the middle-ground casting a long, cold shadow. The small, dark silhouette of the Engineer looks up at the stone.",
+            glyph: "🪨"
+          },
+          {
+            id: 4,
+            title: "Illustration 4: The Observatory",
+            desc: "A vertical, towering shot. The jagged black rocks of the mountain peak rise up against a vast, starlit sky filled with geometric star-crosses. On the peak is a perfect glowing cylindrical room with a glass dome.",
+            glyph: "🔭"
+          }
+        ];
+
+        const VOICES = [
+          { id: "Kore", label: "Kore (Clear & Balanced)" },
+          { id: "Zephyr", label: "Zephyr (Warm Whisper)" },
+          { id: "Puck", label: "Puck (Energetic Teller)" },
+          { id: "Charon", label: "Charon (Deep & Resonant)" },
+          { id: "Leda", label: "Leda (Soft & Gentle)" },
+          { id: "Aoede", label: "Aoede (Melodic Muse)" }
+        ];
+
+        const TONES = [
+          { prompt: "Read calmly, like a comforting bedtime story:", label: "Bedtime Story" },
+          { prompt: "Read with mechanical wonder, like an observant machine:", label: "Observant Machine" },
+          { prompt: "Read in a gentle whisper, with deep empathy and soft pacing:", label: "Gentle Whisper" },
+          { prompt: "Read dramatically, emphasizing the contrasts in the landscape:", label: "Dramatic Narrative" }
+        ];
+
+        function App() {
+          const [storyData, setStoryData] = useState(INITIAL_STORY_DATA);
+          const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
+          const [activeParagraphIndex, setActiveParagraphIndex] = useState(null);
+          const [selectedVoice, setSelectedVoice] = useState("Kore");
+          const [selectedTone, setSelectedTone] = useState("Read with mechanical wonder, like an observant machine:");
+          const [isLoading, setIsLoading] = useState(false);
+          const [isPlaying, setIsPlaying] = useState(false);
+          const [errorMessage, setErrorMessage] = useState("");
+          const [activeTab, setActiveTab] = useState("story");
+          const [activeTheme, setActiveTheme] = useState("stone");
+          
+          // Secure Local API Key State
+          const [localKey, setLocalKey] = useState("");
+
+          // Story Writer state
+          const [writerPrompt, setWriterPrompt] = useState("");
+          const [isGeneratingChapter, setIsGeneratingChapter] = useState(false);
+          const [generatedChapter, setGeneratedChapter] = useState(null);
+          
+          const audioRef = useRef(null);
+          const paragraphRefs = useRef([]);
+
+          const currentChapter = storyData[currentChapterIndex] || storyData[0];
+          
+          // Sandbox constant (platform will swap this out inside the Canvas environment)
+          const apiKey = ""; 
+
+          // Determine the active API key to use
+          const activeApiKey = apiKey || localKey;
+          const theme = THEMES[activeTheme];
+
+          // Apply background theme to body element
+          useEffect(() => {
+            document.body.className = `${theme.bodyBg} ${theme.text} transition-colors duration-300`;
+          }, [activeTheme]);
+
+          // Scroll to highlighted paragraph
+          useEffect(() => {
+            if (activeParagraphIndex !== null && paragraphRefs.current[activeParagraphIndex]) {
+              paragraphRefs.current[activeParagraphIndex].scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+              });
+            }
+          }, [activeParagraphIndex]);
+
+          // Stop audio on chapter changes
+          useEffect(() => {
+            return () => {
+              if (audioRef.current) {
+                audioRef.current.pause();
+              }
+            };
+          }, [currentChapterIndex]);
+
+          // Exponential backoff runner with deep diagnostic parsing
+          const fetchWithRetry = async (url, options, retries = 5, delay = 1000) => {
+            try {
+              const response = await fetch(url, options);
+              if (!response.ok) {
+                let errMsg = `HTTP Status ${response.status}`;
+                try {
+                  const errorData = await response.json();
+                  if (errorData?.error?.message) {
+                    errMsg = `${errorData.error.message} (Code: ${response.status})`;
+                  }
+                } catch (_) {}
+                throw new Error(errMsg);
+              }
+              return await response.json();
+            } catch (error) {
+              if (retries > 1) {
+                await new Promise((resolve) => setTimeout(resolve, delay));
+                return fetchWithRetry(url, options, retries - 1, delay * 2);
+              }
+              throw error;
+            }
+          };
+
+          // Converts binary PCM16 stream into WAV format
+          const convertPcmToWavUrl = (base64Pcm, sampleRate = 24000) => {
+            const byteCharacters = atob(base64Pcm);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const wavHeader = new ArrayBuffer(44);
+            const view = new DataView(wavHeader);
+            
+            const writeString = (view, offset, string) => {
+              for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+              }
+            };
+
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + byteArray.length, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, byteArray.length, true);
+
+            const blob = new Blob([wavHeader, byteArray], { type: 'audio/wav' });
+            return URL.createObjectURL(blob);
+          };
+
+          // Play narrative chunks recursively
+          const playParagraph = async (index) => {
+            if (!activeApiKey) {
+              setErrorMessage("API Key Required. Please paste your Gemini API key in the Communication panel.");
+              return;
+            }
+
+            if (index >= currentChapter.paragraphs.length) {
+              setIsPlaying(false);
+              setActiveParagraphIndex(null);
+              return;
+            }
+
+            setIsLoading(true);
+            setErrorMessage("");
+            setActiveParagraphIndex(index);
+
+            const paragraphText = currentChapter.paragraphs[index];
+            const fullPrompt = `${selectedTone} "${paragraphText}"`;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${activeApiKey}`;
+            
+            const payload = {
+              contents: [{
+                parts: [{ text: fullPrompt }]
+              }],
+              generationConfig: {
+                responseModalities: ["AUDIO"],
+                speechConfig: {
+                  voiceConfig: {
+                    prebuiltVoiceConfig: {
+                      voiceName: selectedVoice
+                    }
+                  }
+                }
+              }
+            };
+
+            try {
+              const data = await fetchWithRetry(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+              });
+
+              const audioData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+              const mimeType = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.mimeType || "";
+              
+              let sampleRate = 24000;
+              const rateMatch = mimeType.match(/rate=(\d+)/);
+              if (rateMatch && rateMatch[1]) {
+                sampleRate = parseInt(rateMatch[1], 10);
+              }
+
+              if (!audioData) {
+                throw new Error("No audio payload returned from the Oracle's voice core.");
+              }
+
+              const wavUrl = convertPcmToWavUrl(audioData, sampleRate);
+              
+              if (audioRef.current) {
+                audioRef.current.pause();
+              }
+
+              audioRef.current = new Audio(wavUrl);
+              setIsLoading(false);
+              setIsPlaying(true);
+              audioRef.current.play();
+
+              audioRef.current.onended = () => {
+                playParagraph(index + 1);
+              };
+
+            } catch (error) {
+              console.error(error);
+              setErrorMessage(`Voice Synthesizer alert: ${error.message}`);
+              setIsLoading(false);
+              setIsPlaying(false);
+            }
+          };
+
+          const handleStop = () => {
+            if (audioRef.current) {
+              audioRef.current.pause();
+            }
+            setIsPlaying(false);
+            setActiveParagraphIndex(null);
+          };
+
+          // Story Writer engine connection using Gemini 2.5 Flash Preview model with lowercase JSON schema types
+          const handleGenerateChapter = async () => {
+            if (!activeApiKey) {
+              setErrorMessage("API Key Required to connect to the Story Writer.");
+              return;
+            }
+
+            setIsGeneratingChapter(true);
+            setErrorMessage("");
+            setGeneratedChapter(null);
+
+            const systemPrompt = `You are AX-12's creative engine, a quiet, brilliant engineering muse. Assist the user in writing successive chapters of 'The Wild Engineer'. Keep the tone identical to preceding logs: beautifully paced, reflective, rich with soft mechanical metaphors, and filled with deep emotional resonance. Write the output in clean JSON containing exactly a 'title', a beautiful ASCII art schema 'ascii', and an array of 4-6 narrative 'paragraphs'. Ensure the chapter fits seamlessly with the previous events. Do not generate markdown code wrappers outside the JSON schema.`;
+
+            const fullPrompt = `The previous chapters established AX-12 building an observatory and communicating with friends (Tristan and Arlie) in the stars. Write a brand new chapter ${storyData.length + 1} based on this instruction: "${writerPrompt}".`;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${activeApiKey}`;
+
+            // Lowercase schema types are strictly processed by standard REST endpoints without validation faults
+            const payload = {
+              contents: [{
+                parts: [{ text: fullPrompt }]
+              }],
+              systemInstruction: {
+                parts: [{ text: systemPrompt }]
+              },
+              generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string" },
+                    ascii: { type: "string" },
+                    paragraphs: {
+                      type: "array",
+                      items: { type: "string" }
+                    }
+                  },
+                  required: ["title", "ascii", "paragraphs"]
+                }
+              }
+            };
+
+            try {
+              const data = await fetchWithRetry(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+              });
+
+              const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (!textResponse) {
+                throw new Error("Empty creative response received from the celestial muse core.");
+              }
+
+              const parsed = JSON.parse(textResponse);
+              setGeneratedChapter(parsed);
+            } catch (err) {
+              console.error(err);
+              setErrorMessage(`Muse Engine alert: ${err.message}`);
+            } finally {
+              setIsGeneratingChapter(false);
+            }
+          };
+
+          const handleAddGeneratedChapter = () => {
+            if (!generatedChapter) return;
+            const newChapter = {
+              chapter: storyData.length + 1,
+              title: generatedChapter.title || `Chapter ${storyData.length + 1}`,
+              ascii: generatedChapter.ascii || `[ Chapter Code Sync ]`,
+              paragraphs: generatedChapter.paragraphs || []
+            };
+
+            const updatedStory = [...storyData, newChapter];
+            setStoryData(updatedStory);
+            setCurrentChapterIndex(updatedStory.length - 1);
+            setGeneratedChapter(null);
+            setWriterPrompt("");
+            setActiveTab("story");
+          };
+
+          return (
+            <div className={`min-h-screen flex flex-col justify-between selection:bg-pink-200 selection:text-pink-900`}>
+              
+              {/* Header Panel */}
+              <header className={`border-b ${theme.cardBorder} ${theme.cardBg} backdrop-blur-md sticky top-0 z-10 px-6 py-4`}>
+                <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl animate-sprinkle">🤖</span>
+                    <div>
+                      <h1 className={`text-xl font-extrabold tracking-tight ${theme.heading}`}>The Wild Engineer</h1>
+                      <p className={`text-xs ${theme.subtext} font-medium`}>Model AX-12 Narrative Hub // Io-01</p>
+                    </div>
+                  </div>
+
+                  {/* Navigation Tabs */}
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <button
+                      onClick={() => { setActiveTab("story"); handleStop(); }}
+                      className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                        activeTab === "story" ? theme.activeTab : theme.inactiveTab
+                      }`}
+                    >
+                      📖 Story Logs
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab("writer"); handleStop(); }}
+                      className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                        activeTab === "writer" ? theme.activeTab : theme.inactiveTab
+                      }`}
+                    >
+                      ✍️ Muse Engine
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab("illustrations"); handleStop(); }}
+                      className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                        activeTab === "illustrations" ? theme.activeTab : theme.inactiveTab
+                      }`}
+                    >
+                      🎨 Sketches
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab("appendix"); handleStop(); }}
+                      className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                        activeTab === "appendix" ? theme.activeTab : theme.inactiveTab
+                      }`}
+                    >
+                      ⚓ Appendix
+                    </button>
+                  </div>
+                </div>
+              </header>
+
+              {/* Main App Layout */}
+              <main className="max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* Left Panel: Settings and Selectors */}
+                <section className="lg:col-span-4 space-y-6 w-full">
+                  
+                  {/* Comm Deck Control Card */}
+                  <div className={`${theme.cardBg} p-5 rounded-3xl border ${theme.cardBorder} shadow-sm space-y-4`}>
+                    <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+                      <h3 className={`font-bold ${theme.heading} flex items-center gap-2 text-sm`}>
+                        <span>📻</span> Communication Array
+                      </h3>
+                      {isLoading && (
+                        <span className="flex h-2 w-2 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-pink-500"></span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Quick Theme Switcher */}
+                    <div className="space-y-1.5">
+                      <label className={`text-[10px] font-bold ${theme.subtext} uppercase tracking-wider`}>Interface Theme</label>
+                      <div className="grid grid-cols-3 gap-1">
+                        {Object.values(THEMES).map((t) => (
+                          <button
+                            key={t.id}
+                            onClick={() => setActiveTheme(t.id)}
+                            className={`px-2 py-1.5 rounded-lg text-xs font-semibold border transition-all text-center ${
+                              activeTheme === t.id
+                                ? "bg-stone-900 border-stone-900 text-stone-50"
+                                : "bg-stone-100/55 border-stone-200 text-stone-600 hover:bg-stone-100"
+                            }`}
+                          >
+                            {t.name.split(" ")[0]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* API Key Configuration Port */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between items-center">
+                        <label className={`text-[10px] font-bold ${theme.subtext} uppercase tracking-wider`}>Gemini API Key</label>
+                        {apiKey && (
+                          <span className="text-[9px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 font-bold">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <input
+                        type="password"
+                        placeholder={apiKey ? "🔐 Injected by Sandbox" : "🔑 Paste your Gemini API key..."}
+                        value={localKey}
+                        disabled={!!apiKey}
+                        onChange={(e) => { setLocalKey(e.target.value); setErrorMessage(""); }}
+                        className={`w-full rounded-xl border ${theme.inputBorder} ${theme.inputBg} p-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/30 disabled:opacity-75 disabled:text-stone-400 font-mono`}
+                      />
+                      {!apiKey && !localKey && (
+                        <p className="text-[10px] text-stone-400 leading-tight">
+                          Get a key at <a href="https://aistudio.google.com/" target="_blank" className="text-sky-600 hover:underline">Google AI Studio</a>.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className={`text-[10px] font-bold ${theme.subtext} uppercase tracking-wider`}>Celestial Voice</label>
+                      <select
+                        value={selectedVoice}
+                        onChange={(e) => { setSelectedVoice(e.target.value); handleStop(); }}
+                        className={`w-full rounded-xl border ${theme.inputBorder} ${theme.inputBg} p-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/30`}
+                      >
+                        {VOICES.map((v) => (
+                          <option key={v.id} value={v.id}>{v.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className={`text-[10px] font-bold ${theme.subtext} uppercase tracking-wider`}>Narrator Tone</label>
+                      <select
+                        value={selectedTone}
+                        onChange={(e) => { setSelectedTone(e.target.value); handleStop(); }}
+                        className={`w-full rounded-xl border ${theme.inputBorder} ${theme.inputBg} p-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/30`}
+                      >
+                        {TONES.map((t) => (
+                          <option key={t.prompt} value={t.prompt}>{t.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="bg-stone-950 p-4 rounded-xl border border-stone-800 flex items-center justify-between">
+                      <span className="text-[10px] font-mono text-stone-400 tracking-wide">SYSTEM FREQUENCY:</span>
+                      <div className="flex gap-1 h-6 items-end">
+                        {[...Array(6)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-1 rounded-t transition-all ${
+                              isPlaying 
+                                ? "bg-sky-400 animate-pulse" 
+                                : "bg-stone-800"
+                            }`}
+                            style={{
+                              height: isPlaying ? `${Math.floor(Math.random() * 24) + 4}px` : '4px',
+                              animationDelay: `${i * 150}ms`
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex gap-2">
+                      {isPlaying ? (
+                        <button
+                          onClick={handleStop}
+                          className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${theme.btnDanger}`}
+                        >
+                          ⏹️ Disconnect Stream
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => playParagraph(0)}
+                          disabled={isLoading}
+                          className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${theme.btnPrimary}`}
+                        >
+                          {isLoading ? "Initiating Uplink..." : "🎙️ Broadcast Story"}
+                        </button>
+                      )}
+                    </div>
+
+                    {errorMessage && (
+                      <div className="text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-100 leading-relaxed font-mono break-all max-h-[150px] overflow-y-auto">
+                        ⚠️ {errorMessage}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Dynamic Logs & Sequences Tracker */}
+                  <div className={`${theme.cardBg} p-5 rounded-3xl border ${theme.cardBorder} shadow-sm space-y-3`}>
+                    <h3 className={`font-bold ${theme.heading} text-xs border-b border-stone-100 pb-2`}>Logs & Sequences</h3>
+                    <div className="space-y-1 max-h-[220px] overflow-y-auto">
+                      {storyData.map((ch, idx) => (
+                        <button
+                          key={ch.chapter}
+                          onClick={() => { setCurrentChapterIndex(idx); handleStop(); setActiveTab("story"); }}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-all flex items-center gap-2 ${
+                            currentChapterIndex === idx && activeTab === "story"
+                              ? `${theme.accentText} bg-pink-500/10 font-bold border-l-4 border-pink-500 pl-2`
+                              : `${theme.text} hover:bg-stone-100/50`
+                          }`}
+                        >
+                          <span>📓</span>
+                          <span className="truncate">{ch.title}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                </section>
+
+                {/* Right Panel: Primary Content Box */}
+                <section className={`${theme.cardBg} lg:col-span-8 p-6 md:p-8 rounded-3xl border ${theme.cardBorder} shadow-sm min-h-[550px] transition-all`}>
+                  
+                  {/* Story Reader Tab */}
+                  {activeTab === "story" && (
+                    <div className="space-y-8 animate-fadeIn">
+                      <div>
+                        <span className={`text-[10px] font-bold ${theme.accentText} uppercase tracking-widest block mb-1`}>
+                          DATA LOG SEQUENCE 0{currentChapter.chapter}
+                        </span>
+                        <h2 className={`text-2xl md:text-3xl font-black ${theme.heading} tracking-tight`}>
+                          {currentChapter.title}
+                        </h2>
+                      </div>
+
+                      {/* Monospace Graphic Panel */}
+                      <div className="relative group">
+                        <div className="absolute top-3 right-3 text-[9px] font-mono uppercase bg-stone-800 text-stone-400 px-2 py-0.5 rounded tracking-widest opacity-60">
+                          MONOSPACE GRID
+                        </div>
+                        <pre className="font-mono text-xs leading-normal overflow-x-auto p-5 bg-stone-900 text-stone-100 rounded-2xl border border-stone-800 shadow-inner select-all">
+                          {currentChapter.ascii}
+                        </pre>
+                      </div>
+
+                      {/* Text Nodes with highlight capability */}
+                      <div className={`space-y-4 leading-relaxed ${theme.text} text-sm sm:text-base`}>
+                        {currentChapter.paragraphs.map((para, idx) => {
+                          const isActive = activeParagraphIndex === idx;
+                          return (
+                            <div
+                              key={idx}
+                              ref={(el) => (paragraphRefs.current[idx] = el)}
+                              onClick={() => playParagraph(idx)}
+                              className={`p-3 rounded-xl transition-all cursor-pointer border ${
+                                isActive
+                                  ? "bg-pink-500/10 border-pink-300 text-stone-950 shadow-sm translate-x-1"
+                                  : "border-transparent hover:bg-stone-100/50"
+                              }`}
+                            >
+                              <p className="relative">
+                                {isActive && (
+                                  <span className="absolute -left-3.5 top-1 text-pink-500 text-[10px] animate-bounce">▶</span>
+                                )}
+                                {para}
+                              </p>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Horizontal Page Control Grid */}
+                      <div className="flex items-center justify-between border-t border-stone-100 pt-6">
+                        <button
+                          disabled={currentChapterIndex === 0}
+                          onClick={() => { setCurrentChapterIndex(prev => prev - 1); handleStop(); }}
+                          className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${theme.btnSecondary} disabled:opacity-30 disabled:pointer-events-none`}
+                        >
+                          ⏮️ Back
+                        </button>
+                        <span className={`text-[10px] font-mono ${theme.subtext}`}>LOG {currentChapterIndex + 1} OF {storyData.length}</span>
+                        <button
+                          disabled={currentChapterIndex === storyData.length - 1}
+                          onClick={() => { setCurrentChapterIndex(prev => prev + 1); handleStop(); }}
+                          className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all ${theme.btnSecondary} disabled:opacity-30 disabled:pointer-events-none`}
+                        >
+                          Next ⏭️
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Story Writer Muse Interface */}
+                  {activeTab === "writer" && (
+                    <div className="space-y-6">
+                      <div>
+                        <h2 className={`text-2xl font-black ${theme.heading} tracking-tight`}>✍️ AX-12's Muse Console</h2>
+                        <p className={`text-xs ${theme.subtext} mt-1 leading-normal`}>
+                          Connect to the creative network. Use your active Gemini credentials to brainstorm and automatically format the next logs in the chronological stack.
+                        </p>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className={`text-[10px] font-bold ${theme.subtext} uppercase tracking-wider block mb-1.5`}>
+                            Narrative Command / Next Chapter Outline
+                          </label>
+                          <textarea
+                            placeholder="e.g. Write a chapter where Tristan lands his repaired starship on AX-12's peak, bringing a cargo of luminous seeds..."
+                            value={writerPrompt}
+                            onChange={(e) => setWriterPrompt(e.target.value)}
+                            rows={4}
+                            className={`w-full rounded-2xl border ${theme.inputBorder} ${theme.inputBg} p-4 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-pink-500/30 font-sans leading-relaxed`}
+                          />
+                        </div>
+
+                        <button
+                          onClick={handleGenerateChapter}
+                          disabled={isGeneratingChapter || !writerPrompt.trim()}
+                          className={`w-full py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all ${theme.btnPrimary} disabled:opacity-40 disabled:pointer-events-none`}
+                        >
+                          {isGeneratingChapter ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                              </svg>
+                              Synthesizing Celestial Chapter...
+                            </span>
+                          ) : (
+                            "✨ Draft Sequence with Gemini Engine"
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Displaying Live Generated Drafts */}
+                      {generatedChapter && (
+                        <div className="mt-6 border-t border-stone-100 pt-6 space-y-4 animate-fadeIn">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold text-pink-600 bg-pink-50 px-2 py-1 rounded">DRAFT FOR LOG 0{storyData.length + 1}</span>
+                            <button
+                              onClick={handleAddGeneratedChapter}
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
+                            >
+                              ✅ Integrate Into Main Log Book
+                            </button>
+                          </div>
+
+                          <div className="bg-stone-50 border border-stone-200 p-5 rounded-2xl space-y-4">
+                            <h3 className="font-extrabold text-stone-900 text-lg">{generatedChapter.title}</h3>
+                            <pre className="font-mono text-[10px] p-4 bg-stone-900 text-stone-100 rounded-xl overflow-x-auto">
+                              {generatedChapter.ascii}
+                            </pre>
+                            <div className="space-y-3 text-xs text-stone-700 leading-relaxed">
+                              {generatedChapter.paragraphs.map((para, idx) => (
+                                <p key={idx}>{para}</p>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Illustration Sketch Board Tab */}
+                  {activeTab === "illustrations" && (
+                    <div className="space-y-6">
+                      <div>
+                        <h2 className={`text-2xl font-black ${theme.heading} tracking-tight`}>🎨 Mapped Illustrations</h2>
+                        <p className={`text-xs ${theme.subtext} mt-1 leading-normal`}>
+                          These visual guidelines are designed for artistic rendering of the environment in Peter Brown's ink-wash and charcoal aesthetic.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                        {ILLUSTRATION_GUIDE.map((item) => (
+                          <div key={item.id} className={`p-5 rounded-2xl border ${theme.cardBorder} bg-stone-50/50 space-y-3 flex flex-col justify-between`}>
+                            <div>
+                              <div className="flex items-center gap-2.5 mb-2">
+                                <span className="text-xl p-2 bg-stone-100 rounded-xl">{item.glyph}</span>
+                                <h4 className={`font-bold ${theme.heading} text-xs leading-tight`}>{item.title}</h4>
+                              </div>
+                              <p className={`text-xs ${theme.text} leading-relaxed italic`}>
+                                "{item.desc}"
+                              </p>
+                            </div>
+                            <div className="text-[10px] font-mono uppercase bg-stone-200/50 text-stone-600 px-2 py-1 rounded inline-block text-center mt-3 tracking-wide">
+                              MAPPED COMPOSITION 0{item.id}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Real World & Interactive Appendix */}
+                  {activeTab === "appendix" && (
+                    <div className="space-y-6 animate-fadeIn">
+                      <div>
+                        <h2 className={`text-2xl font-black ${theme.heading} tracking-tight`}>⚓ Documentation Appendix</h2>
+                        <p className={`text-xs ${theme.subtext} mt-1 leading-normal`}>
+                          The contextual foundations of AX-12's mission loop. This bridge links fictional machinery back to real-world reports and interactive metrics.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4 pt-2">
+                        
+                        {/* Interactive Report Dashboard Link */}
+                        <div className="p-5 rounded-2xl border border-sky-100 bg-sky-50/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div>
+                            <span className="text-[9px] font-mono uppercase tracking-wider text-sky-600 font-bold">Local Filetree Bridge</span>
+                            <h4 className="font-bold text-stone-900 text-sm mt-0.5">Interactive Report Dashboard</h4>
+                            <p className="text-xs text-stone-500 mt-1 leading-normal">
+                              Review complete multi-dimensional analytics, data patterns, and behavioral trend charts generated alongside the logs.
+                            </p>
+                          </div>
+                          <a
+                            href="./dashboard.html"
+                            target="_blank"
+                            className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all whitespace-nowrap self-stretch sm:self-auto text-center"
+                          >
+                            📊 Launch Dashboard
+                          </a>
+                        </div>
+
+                        {/* External Chronicle Link */}
+                        <div className="p-5 rounded-2xl border border-pink-100 bg-pink-50/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                          <div>
+                            <span className="text-[9px] font-mono uppercase tracking-wider text-pink-600 font-bold">Historical Catalyst</span>
+                            <h4 className="font-bold text-stone-900 text-sm mt-0.5">The Chronicle: \"Bigots vs. Groomers\"</h4>
+                            <p className="text-xs text-stone-500 mt-1 leading-normal">
+                              The real-world report highlighting community-level book challenges, school-board polarizations, and the systemic noise that inspired AX-12's ascent to the starlit observatory.
+                            </p>
+                          </div>
+                          <a
+                            href="https://www.chroniclenewspaper.com/news/local-news/bigots-vs-groomers-HN2816933"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-xl shadow-sm transition-all whitespace-nowrap self-stretch sm:self-auto text-center"
+                          >
+                            🔗 Read Article
+                          </a>
+                        </div>
+
+                        {/* Theoretical Note Card */}
+                        <div className="p-5 rounded-2xl border border-stone-200 bg-stone-50/50 space-y-3">
+                          <h4 className="font-bold text-stone-800 text-xs tracking-tight uppercase">Systemic Integration Notes:</h4>
+                          <p className="text-xs text-stone-600 leading-relaxed">
+                            Like the ancient hemlock base of AX-12, our systems thrive when we move beyond responding directly to structural insults, replacing the constant screeching with clean, starlit lines of beautiful, resilient code.
+                          </p>
+                        </div>
+
+                      </div>
+                    </div>
+                  )}
+
+                </section>
+
+              </main>
+
+              {/* Console Footer */}
+              <footer className="border-t border-stone-200 bg-stone-100 py-6 px-6 text-center text-[10px] text-stone-400 font-mono tracking-wider">
+                THE WILD ENGINEER TRANSMISSION SEQUENCE // IO-01-NARRATIVE // ORACLE APPARATUS
+              </footer>
+
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
